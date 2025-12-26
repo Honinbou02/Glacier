@@ -1,0 +1,126 @@
+{
+  "format-version": 2,
+  "table-uuid": "162e2776-51bd-4260-a71d-f514b5882a38",
+  "location": "E:/Glacier2/iceberg_snappy_table",
+  "last-updated-ms": 1766596106182,
+  "last-column-id": 5,
+  "schema": {
+    "type": "struct",
+    "schema-id": 0,
+    "fields": [
+      {
+        "id": 1,
+        "name": "id",
+        "required": true,
+        "type": "long"
+      },
+      {
+        "id": 2,
+        "name": "name",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "id": 3,
+        "name": "age",
+        "required": true,
+        "type": "long"
+      },
+      {
+        "id": 4,
+        "name": "salary",
+        "required": true,
+        "type": "double"
+      },
+      {
+        "id": 5,
+        "name": "department",
+        "required": true,
+        "type": "string"
+      }
+    ]
+  },
+  "schemas": [
+    {
+      "type": "struct",
+      "schema-id": 0,
+      "fields": [
+        {
+          "id": 1,
+          "name": "id",
+          "required": true,
+          "type": "long"
+        },
+        {
+          "id": 2,
+          "name": "name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "name": "age",
+          "required": true,
+          "type": "long"
+        },
+        {
+          "id": 4,
+          "name": "salary",
+          "required": true,
+          "type": "double"
+        },
+        {
+          "id": 5,
+          "name": "department",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "current-schema-id": 0,
+  "partition-spec": [],
+  "default-spec-id": 0,
+  "last-partition-id": 999,
+  "properties": {
+    "write.parquet.compression-codec": "snappy",
+    "write.metadata.compression-codec": "none"
+  },
+  "current-snapshot-id": 1,
+  "snapshots": [
+    {
+      "snapshot-id": 1,
+      "timestamp-ms": 1766596106182,
+      "sequence-number": 1,
+      "summary": {
+        "operation": "append",
+        "added-data-files": "1",
+        "added-records": "5",
+        "total-data-files": "1",
+        "total-records": "5"
+      },
+      "manifest-list": "iceberg_snappy_table\\metadata/snap-1-1-manifest-list.avro",
+      "schema-id": 0
+    }
+  ],
+  "snapshot-log": [
+    {
+      "snapshot-id": 1,
+      "timestamp-ms": 1766596106182
+    }
+  ],
+  "metadata-log": [],
+  "sort-orders": [
+    {
+      "order-id": 0,
+      "fields": []
+    }
+  ],
+  "default-sort-order-id": 0,
+  "refs": {
+    "main": {
+      "snapshot-id": 1,
+      "type": "branch"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "manifest_path": "data/data-00000.parquet",
+    "manifest_length": 1490,
+    "partition_spec_id": 0,
+    "added_snapshot_id": 1,
+    "added_data_files_count": 1,
+    "existing_data_files_count": 0,
+    "deleted_data_files_count": 0,
+    "added_rows_count": 5,
+    "existing_rows_count": 0,
+    "deleted_rows_count": 0
+  }
+]

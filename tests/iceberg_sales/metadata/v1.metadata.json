@@ -1,0 +1,66 @@
+{
+  "format-version": 2,
+  "table-uuid": "12345678-1234-1234-1234-123456789abc",
+  "location": "e:\\Glacier2\\iceberg_sales",
+  "last-updated-ms": 1700000000000,
+  "last-column-id": 5,
+  "current-snapshot-id": 1001,
+  "current-schema-id": 0,
+  "default-spec-id": 0,
+  "schemas": [
+    {
+      "schema-id": 0,
+      "fields": [
+        {
+          "id": 1,
+          "name": "order_id",
+          "required": true,
+          "type": "long"
+        },
+        {
+          "id": 2,
+          "name": "product_name",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "name": "price",
+          "required": true,
+          "type": "double"
+        },
+        {
+          "id": 4,
+          "name": "quantity",
+          "required": true,
+          "type": "int"
+        },
+        {
+          "id": 5,
+          "name": "discount",
+          "required": true,
+          "type": "double"
+        }
+      ]
+    }
+  ],
+  "partition-specs": [
+    {
+      "spec-id": 0,
+      "fields": []
+    }
+  ],
+  "snapshots": [
+    {
+      "snapshot-id": 1001,
+      "sequence-number": 1,
+      "timestamp-ms": 1700000000000,
+      "manifest-list": "file://e:\\Glacier2\\iceberg_sales\\metadata\\manifest-001.avro",
+      "summary": {
+        "operation": "append",
+        "added-data-files": "2",
+        "added-records": "10"
+      }
+    }
+  ]
+}
