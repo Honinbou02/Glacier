@@ -7,15 +7,59 @@
 [![Zig Version](https://img.shields.io/badge/zig-0.15.2-orange.svg)](https://ziglang.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-alpha-orange.svg)]()
-[![Version](https://img.shields.io/badge/version-0.8.3--alpha-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-0.8.4--alpha-blue.svg)]()
 
 </div>
 
-> **A production-ready, JVM-free OLAP query engine for Apache Iceberg, Parquet, and Avro with full SQL support**
+> **A Pure Zig, JVM-free OLAP query engine for Apache Iceberg, Parquet, and Avro with full SQL support**
 
 Glacier is a high-performance **OLAP (Online Analytical Processing)** query engine written in **100% pure Zig**, designed to query **Apache Iceberg tables**, **Parquet files**, and **Avro files** from local filesystems and object storage, with complete **SQL support** including GROUP BY, aggregations, and predicate pushdown.
 
 Unlike traditional solutions (Spark, Trino), Glacier runs **without the JVM**, compiling to native machine code with **zero garbage collection**, targeting **ultra-low latency** and **minimal memory footprint**.
+
+---
+
+## What's New in v0.8.4-alpha
+
+### FLOAT and DOUBLE Support (Major Feature)
+
+**Complete IEEE 754 Floating-Point Implementation**
+- Full FLOAT (32-bit) and DOUBLE (64-bit) decoding support
+- Batch decoders: `decodePlainFloat32()` and `decodePlainFloat64()`
+- IEEE 754 bitcast conversion using Zig's `@bitCast`
+- Display formatting with 2 decimal places precision
+- Support for both PLAIN and Dictionary encoding
+
+**Critical Fixes**
+- **Fixed FLOAT/DOUBLE reading as 0.00**
+  - Root Cause: Same hybrid RLE header issue that affected INT64
+  - Solution: Extended RLE header detection (6-byte skip) to FLOAT32/FLOAT64
+  - Impact: All decimal values now read correctly (e.g., salary: 50000.00)
+- **Fixed display showing "?" for floating-point values**
+  - Root Cause: REPL formatting missing cases for float32/float64
+  - Solution: Added `{d: <15.2}` format specifiers
+  - Impact: Clean display with 2 decimal places
+- **Fixed dictionary encoding for FLOAT/DOUBLE**
+  - Root Cause: Dictionary lookup only supported INT32/INT64/STRING
+  - Solution: Extended dictionary pages and lookup to f32/f64
+  - Impact: Dictionary-encoded float columns work perfectly
+
+**Type System Enhancements**
+- Extended dictionary encoding to support FLOAT32 and FLOAT64
+- Hybrid encoding (RLE header + PLAIN) now consistent across all numeric types
+- Schema mapping: Parquet FLOAT → batch_mod.DataType.float32
+- Schema mapping: Parquet DOUBLE → batch_mod.DataType.float64
+
+**Files Modified:**
+- `src/formats/value_decoder.zig` - Float/double batch decoders
+- `src/execution/physical.zig` - Dictionary + PLAIN support with RLE skip
+- `glacier_repl.zig` - Display formatting for floating-point
+
+**Testing:**
+- employees.parquet (DOUBLE column) - all salary values correct (50000.00, 60000.00, etc.)
+- Zero compilation errors
+- Zero memory leaks
+- Consistent with INT64 RLE header handling
 
 ---
 
@@ -127,7 +171,7 @@ FileMetaData {
   - [OK] Per-column dictionary caching
   - [OK] RLE index decoding (all bit-widths 0-32)
   - [OK] Automatic dictionary lookup
-  - [OK] Support for INT32, INT64, STRING types
+  - [OK] Support for INT32, INT64, FLOAT32, FLOAT64, STRING types
 - [OK] **Universal Compatibility** - Extended Thrift field ID support for all Parquet writers
 - [OK] **Multi-page Columns** - Correctly handles columns spanning multiple compressed pages
 - [OK] **RLE Decoder** - Complete Run-Length Encoding with bit-packing (all bit-widths 0-32)
@@ -477,12 +521,10 @@ SELECT * ORDER BY price DESC, name ASC LIMIT 5;
 ### Parquet Physical Types
 - [OK] **INT32** - 32-bit signed integers (fully supported)
 - [OK] **INT64** - 64-bit signed integers (fully supported)
-- [PARTIAL] **FLOAT** - IEEE 754 single precision (reads as INT32, needs decoder)
-- [PARTIAL] **DOUBLE** - IEEE 754 double precision (shows NULL, needs decoder)
+- [OK] **FLOAT** - IEEE 754 single precision (fully supported - v0.8.4+)
+- [OK] **DOUBLE** - IEEE 754 double precision (fully supported - v0.8.4+)
 - [OK] **BOOLEAN** - Boolean values (fully supported)
 - [OK] **BYTE_ARRAY** - Variable-length strings/binary (fully supported)
-
-**Note:** FLOAT and DOUBLE support will be added in v0.8.4-alpha.
 
 ### Encodings
 - [OK] **PLAIN** - Unencoded values
@@ -599,6 +641,26 @@ Glacier/
 
 ## Recent Milestones
 
+### January 2026 - v0.8.4-alpha Release
+
+**FLOAT and DOUBLE Support:**
+- [OK] Complete IEEE 754 implementation - FLOAT (32-bit) and DOUBLE (64-bit)
+- [OK] Batch decoders with proper bitcast conversion
+- [OK] RLE header detection and skip (same fix as INT64)
+- [OK] Dictionary encoding support for f32/f64
+- [OK] Display formatting with 2 decimal places
+
+**Critical Fixes:**
+- [OK] Fixed FLOAT/DOUBLE reading as 0.00 - extended RLE header skip
+- [OK] Fixed display showing "?" - added format specifiers
+- [OK] Fixed dictionary encoding - extended to floating-point types
+
+**Testing:**
+- [OK] employees.parquet (DOUBLE salary) - all values correct
+- [OK] Consistent RLE header handling across INT64/FLOAT32/FLOAT64
+- [OK] Zero memory leaks confirmed
+- [OK] Clean compilation
+
 ### January 2026 - v0.8.3-alpha Release
 
 **Dictionary Encoding:**
@@ -704,6 +766,7 @@ Glacier/
 - [OK] Page-level optimizations
 
 ### [WIP] Phase 3: Advanced SQL (In Progress)
+- [OK] FLOAT and DOUBLE support (v0.8.4)
 - [  ] Avro aggregations and GROUP BY
 - [  ] Multi-column ORDER BY
 - [  ] HAVING clause
@@ -959,21 +1022,6 @@ zig build repl
 
 ---
 
-## Notes
-
-**Performance:** Glacier uses efficient sorting algorithms but ORDER BY on very large result sets (100K+ rows) may be slow. For production use with massive datasets, results can be limited or sorted columns indexed.
-
-**Memory Safety:** All code is verified with Zig's GeneralPurposeAllocator in test mode. Zero memory leaks across all test suites.
-
-**Type Support (Current):**
-- **Fully Supported:** INT32, INT64, STRING/BYTE_ARRAY, BOOLEAN
-- **Partial:** FLOAT (reads as INT32), DOUBLE (shows NULL)
-- **Next Release:** Full FLOAT/DOUBLE support (v0.8.4)
-
-**Compatibility:** Glacier reads Parquet files from any source: PyArrow, DuckDB, Pandas, Spark, Polars, and more. Universal Thrift field ID support ensures maximum compatibility.
-
----
-
 ## Roadmap
 
 ```
@@ -990,13 +1038,17 @@ Glacier Roadmap ~~\o\
   │  └─ Multi-page Column Reading
   │  └─ Page-level Early Termination
   │
-      v0.8.3-alpha (Jan 2026) < CURRENT
+      v0.8.3-alpha (Jan 2026)
   │  └─ Dictionary Encoding (INT32/INT64/STRING)
   │  └─ Memory Leak Fixes (30+ leaks → 0)
   │  └─ Hybrid RLE Header Detection
   │
-      v0.8.4-alpha (Later this month) < NEXT
-  │  └─ FLOAT/DOUBLE Support
+      v0.8.4-alpha (Jan 2026) < CURRENT
+  │  └─ FLOAT/DOUBLE Support (COMPLETE)
+  │  └─ Dictionary Encoding for FLOAT32/FLOAT64
+  │  └─ RLE Header Skip for All Numeric Types
+  │
+      v0.8.5-alpha (Later this month) < NEXT
   │  └─ Avro Aggregations (COUNT/AVG/SUM)
   │  └─ Multi-column ORDER BY
   │
@@ -1045,7 +1097,7 @@ Glacier Roadmap ~~\o\
 
 ## Current Status
 
-**Latest Release:** `v0.8.3-alpha` - Dictionary Encoding Support (January 2026)  
-**Next Milestone:** `v0.8.4-alpha` - FLOAT/DOUBLE + Avro Aggregations (Later, just wait ~~\o\)  
+**Latest Release:** `v0.8.4-alpha` - FLOAT/DOUBLE Support (January 2026)  
+**Next Milestone:** `v0.8.5-alpha` - Avro Aggregations (Coming soon)  
 
-**Development Status:** - **ACTIVE** - Regular update
+**Development Status:** - **ACTIVE**
