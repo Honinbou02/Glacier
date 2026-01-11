@@ -276,6 +276,12 @@ const ScanIterator = struct {
                          } else if (col_schema.data_type == .int32) {
                              const val = dict_col.getValue(i32, idx_usize).?;
                              batch_col.setValue(i32, r, val);
+                         } else if (col_schema.data_type == .float32) {
+                             const val = dict_col.getValue(f32, idx_usize).?;
+                             batch_col.setValue(f32, r, val);
+                         } else if (col_schema.data_type == .float64) {
+                             const val = dict_col.getValue(f64, idx_usize).?;
+                             batch_col.setValue(f64, r, val);
                          }
                          batch_col.setNull(r, false);
                      }
@@ -304,6 +310,32 @@ const ScanIterator = struct {
                          const vals = value_decoder.decodePlainInt32(self.allocator, page_data, num_rows, false) catch continue;
                          defer self.allocator.free(vals);
                          for (vals, 0..) |v, r| if (r < num_rows) batch_col.setValue(i32, r, v);
+                     } else if (col_schema.data_type == .float32) {
+                         // Same RLE header detection as INT64
+                         var decode_offset: usize = 0;
+                         if (page_data.len >= 6) {
+                             const potential_header = std.mem.readInt(u32, page_data[0..4], .little);
+                             if (potential_header < 256) {
+                                 decode_offset = 6;
+                             }
+                         }
+                         const actual_data = page_data[decode_offset..];
+                         const vals = value_decoder.decodePlainFloat32(self.allocator, actual_data, num_rows, false) catch continue;
+                         defer self.allocator.free(vals);
+                         for (vals, 0..) |v, r| if (r < num_rows) batch_col.setValue(f32, r, v);
+                     } else if (col_schema.data_type == .float64) {
+                         // Same RLE header detection as INT64
+                         var decode_offset: usize = 0;
+                         if (page_data.len >= 6) {
+                             const potential_header = std.mem.readInt(u32, page_data[0..4], .little);
+                             if (potential_header < 256) {
+                                 decode_offset = 6;
+                             }
+                         }
+                         const actual_data = page_data[decode_offset..];
+                         const vals = value_decoder.decodePlainFloat64(self.allocator, actual_data, num_rows, false) catch continue;
+                         defer self.allocator.free(vals);
+                         for (vals, 0..) |v, r| if (r < num_rows) batch_col.setValue(f64, r, v);
                      } else if (col_schema.data_type == .string) {
                          const vals = value_decoder.decodePlainByteArray(self.allocator, page_data, num_rows, false) catch continue;
                          const slice_ptr = @as([*][]u8, @ptrCast(@alignCast(batch_col.data.ptr)));
