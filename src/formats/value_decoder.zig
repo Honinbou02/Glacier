@@ -68,6 +68,42 @@ pub fn decodePlainInt32(
     return values;
 }
 
+/// Decode a batch of PLAIN encoded FLOAT values
+pub fn decodePlainFloat32(
+    allocator: std.mem.Allocator,
+    data: []const u8,
+    num_values: usize,
+    _: bool
+) ![]f32 {
+    var values = try allocator.alloc(f32, num_values);
+    errdefer allocator.free(values);
+
+    var decoder = PlainFloatDecoder.init(data);
+    for (0..num_values) |i| {
+        if (decoder.isAtEnd()) return error.UnexpectedEndOfData;
+        values[i] = try decoder.readValue();
+    }
+    return values;
+}
+
+/// Decode a batch of PLAIN encoded DOUBLE values
+pub fn decodePlainFloat64(
+    allocator: std.mem.Allocator,
+    data: []const u8,
+    num_values: usize,
+    _: bool
+) ![]f64 {
+    var values = try allocator.alloc(f64, num_values);
+    errdefer allocator.free(values);
+
+    var decoder = PlainDoubleDecoder.init(data);
+    for (0..num_values) |i| {
+        if (decoder.isAtEnd()) return error.UnexpectedEndOfData;
+        values[i] = try decoder.readValue();
+    }
+    return values;
+}
+
 /// Decode a batch of PLAIN encoded BYTE_ARRAY (String) values
 /// Allocates deep copies of strings because Parquet data buffer is temporary
 pub fn decodePlainByteArray(
